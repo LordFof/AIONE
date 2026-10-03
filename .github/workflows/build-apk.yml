@@ -42,6 +42,17 @@ jobs:
           mkdir buildsrc
           unzip -o AIONE_project.zip -d buildsrc
 
+      - name: Configure YouTube API key
+        working-directory: buildsrc/AIONE_project
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          if [ -z "$YOUTUBE_API_KEY" ]; then
+            echo "::error::GitHub Actions secret YOUTUBE_API_KEY is missing."
+            exit 1
+          fi
+          printf 'YOUTUBE_API_KEY=%s\n' "$YOUTUBE_API_KEY" > local.properties
+
       - name: Build APK
         working-directory: buildsrc/AIONE_project
         run: |
