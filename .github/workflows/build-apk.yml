@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Android SDK
         uses: android-actions/setup-android@v4
@@ -29,5 +29,35 @@ jobs:
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Gradle
-        uses:
+      - name: Install Gradle 8.11.1
+        run: |
+          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+          unzip -q gradle.zip
+          echo "$PWD/gradle-8.11.1/bin" >> "$GITHUB_PATH"
+
+      - name: Check Gradle
+        run: |
+          gradle --version
+
+      - name: Unpack project
+        run: |
+          rm -rf buildsrc
+          mkdir buildsrc
+          unzip -o AIONE_project_play.zip -d buildsrc
+
+      - name: Build Release AAB
+        working-directory: buildsrc/AIONE_project
+        run: |
+          gradle :app:bundleRelease --stacktrace
+
+      - name: Rename AAB
+        run: |
+          mv \
+            buildsrc/AIONE_project/app/build/outputs/bundle/release/app-release.aab \
+            buildsrc/AIONE_project/app/build/outputs/bundle/release/AIONE-release.aab
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIONE-release
+          path: buildsrc/AIONE_project/app/build/outputs/bundle/release/AIONE-release.aab
